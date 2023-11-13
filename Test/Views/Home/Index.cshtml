@@ -1,8 +1,32 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    Layout = "_Layout";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h2>Inserisci Dati</h2>
+    <button id="inserisciDatiBtn">Popola il Database</button>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById("inserisciDatiBtn").addEventListener("click", function () {
+                // Popola il dtatabase quando il pulsante viene cliccato
+                axios.post("/api/Data/InserisciDati")
+                    .then(function (response) {
+                        alert("Dati inseriti con successo!");
+                    })
+                    .catch(function (error) {
+                        alert("Errore durante l'inserimento dei dati. Dettagli: " + error.response.data);
+                    });
+            });
+        });
+    </script>
+</body>
+</html>
+
+
