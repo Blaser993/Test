@@ -11,14 +11,16 @@ using Test.Models;
 namespace Test.Controllers.API
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     public class DataController : ControllerBase
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly PostContext _dbContext;
 
-        public DataController(IServiceProvider serviceProvider)
+        public DataController(IServiceProvider serviceProvider, PostContext dbContext)
         {
             _serviceProvider = serviceProvider;
+            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
         [HttpPost]
@@ -26,7 +28,6 @@ namespace Test.Controllers.API
         {
             try
             {
-
                 // Effettua la richiesta HTTP per ottenere i dati JSON
                 using (var httpClient = new HttpClient())
                 {
@@ -35,30 +36,30 @@ namespace Test.Controllers.API
                     // Converte JSON in lista di oggetti
                     List<Post>? posts = JsonConvert.DeserializeObject<List<Post>>(response);
 
-
-
-                    // Inserisci i Dati nel Database
-                    using (var scope = _serviceProvider.CreateScope())
+                    // Inserisce i Dati nel Database
+                    foreach (var post in posts)
                     {
-                        var dbContext = scope.ServiceProvider.GetRequiredService<PostContext>();
+                        var existingPost = _dbContext.Posts.Find(post.UserId);
 
-                        // Aggiungi i nuovi post solo se non esistono già
-                        foreach (var post in posts)
+                        if (existingPost == null)
                         {
-                            if (!dbContext.Posts.Any(p => p.Id == post.Id))
-                            {
-                                dbContext.Posts.Add(post);
-                            }
+                            _dbContext.Posts.Add(post);
                         }
-
-                        dbContext.SaveChanges();
+                        else
+                        {
+                            // L'entità è già presente, aggiorna i suoi dati
+                            _dbContext.Entry(existingPost).CurrentValues.SetValues(post);
+                        }
                     }
 
-                    return Ok("Dati inseriti con successo");
+                    _dbContext.SaveChanges();
                 }
+
+                return Ok("Dati inseriti con successo");
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.InnerException?.Message);
                 return BadRequest($"Errore: {ex.Message}");
             }
         }

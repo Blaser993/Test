@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Test.Database;
 using Test.Models;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -9,6 +10,8 @@ namespace Test
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            builder.Services.AddDbContext<PostContext>();
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
